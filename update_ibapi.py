@@ -159,6 +159,53 @@ def clean_pycache_directories(base_path):
     return removed_count
 
 
+def fix_version_in_init(repo_path, expected_version):
+    """Fix the version string in ibapi/__init__.py to preserve leading zeros
+
+    The IB API source has VERSION = {"major": 10, "minor": 40, "micro": 1}
+    which produces "10.40.1", but we want "10.40.01" to match the filename.
+
+    Args:
+        repo_path: Path to repository root
+        expected_version: Version string like "10.40.01" from filename
+    """
+    init_path = os.path.join(repo_path, 'ibapi', 'ibapi', '__init__.py')
+
+    if not os.path.exists(init_path):
+        print(f"Warning: {init_path} not found, skipping version fix")
+        return
+
+    print(f"\nFixing version in {init_path}...")
+
+    # Parse expected version
+    parts = expected_version.split('.')
+    if len(parts) != 3:
+        print(f"Warning: Unexpected version format: {expected_version}")
+        return
+
+    major, minor, micro = parts
+
+    # Read the file
+    with open(init_path, 'r') as f:
+        content = f.read()
+
+    # Replace the get_version_string function to preserve leading zeros
+    new_content = re.sub(
+        r'def get_version_string\(\):.*?return version',
+        f'''def get_version_string():
+    # Version string with preserved leading zeros
+    return "{expected_version}"''',
+        content,
+        flags=re.DOTALL
+    )
+
+    # Write back
+    with open(init_path, 'w') as f:
+        f.write(new_content)
+
+    print(f"✓ Version fixed to {expected_version} in __init__.py")
+
+
 def fix_pyproject_toml(repo_path):
     """Fix the pyproject.toml file downloaded from IB API source
 
@@ -250,6 +297,9 @@ def commit_and_tag(pythonclient_path, version, repo_path=None):
     # Copy pythonclient contents to ibapi directory
     print(f"Copying {pythonclient_path} to {ibapi_dest}...")
     shutil.copytree(pythonclient_path, ibapi_dest)
+
+    # Fix the version in __init__.py to preserve leading zeros
+    fix_version_in_init(repo_path, version)
 
     # Fix the pyproject.toml that came from IB source
     fix_pyproject_toml(repo_path)

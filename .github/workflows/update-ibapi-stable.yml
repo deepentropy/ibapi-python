@@ -112,6 +112,10 @@ jobs:
             exit 0
           fi
 
+          # Clean any existing dist directory
+          rm -rf dist
+          mkdir -p dist
+
           while IFS='|' read -r VERSION URL; do
             TAG="v${VERSION}"
             echo "Checking version $VERSION (tag $TAG)..."
@@ -126,31 +130,27 @@ jobs:
             NEW_VERSIONS="${NEW_VERSIONS}${VERSION} "
             NEW_TAGS="${NEW_TAGS}${TAG} "
 
-            # Download and update
+            # Download and update (this will commit and tag)
             echo "  Downloading and updating..."
             python update_ibapi.py "$URL"
 
             # Build package
             echo "  Building package..."
-            rm -rf dist build *.egg-info
+            rm -rf build *.egg-info
             python -m build
 
-            # Move built files to a version-specific directory
-            mkdir -p "/tmp/dist-${VERSION}"
-            mv dist/* "/tmp/dist-${VERSION}/"
-
+            # dist/ now contains the built packages
+            # They will accumulate for all processed versions
             BUILT_ANY=true
           done < /tmp/stable_versions.txt
 
           if [ "$BUILT_ANY" = true ]; then
-            # Combine all dist files
-            mkdir -p dist
-            find /tmp -name "dist-*" -type d -exec cp -r {}/* dist/ \;
-
             echo "has-new-version=true" >> $GITHUB_OUTPUT
             echo "versions=$NEW_VERSIONS" >> $GITHUB_OUTPUT
             echo "tags=$NEW_TAGS" >> $GITHUB_OUTPUT
             echo "New stable versions: $NEW_VERSIONS"
+            echo "Built packages:"
+            ls -lh dist/
           else
             echo "has-new-version=false" >> $GITHUB_OUTPUT
             echo "No new stable versions"

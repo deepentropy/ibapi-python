@@ -99,8 +99,57 @@ def update_version(download_url):
         return False
 
 
+def build_package():
+    """Build the package using python -m build"""
+    print(f"\n{'='*60}")
+    print("Building package...")
+    print(f"{'='*60}\n")
+
+    # Clean old build artifacts
+    import shutil
+    for dir_name in ['dist', 'build', 'ibapi.egg-info']:
+        if os.path.exists(dir_name):
+            print(f"Cleaning {dir_name}/")
+            shutil.rmtree(dir_name)
+
+    try:
+        result = subprocess.run(
+            [sys.executable, '-m', 'build'],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        print(result.stdout)
+        if result.stderr:
+            print("STDERR:", result.stderr, file=sys.stderr)
+
+        # Verify dist files were created
+        if os.path.exists('dist') and os.listdir('dist'):
+            print(f"\nSuccessfully built package files:")
+            for f in os.listdir('dist'):
+                print(f"  - dist/{f}")
+            return True
+        else:
+            print("ERROR: No dist files were created")
+            return False
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error building package: {e}")
+        print("STDOUT:", e.stdout)
+        print("STDERR:", e.stderr)
+        return False
+
+
 def publish_to_pypi():
-    """Run publish_to_pypi.py to build and publish the package"""
+    """Run publish_to_pypi.py to publish the package (or skip if SKIP_PYPI_UPLOAD is set)"""
+    skip_upload = os.environ.get('SKIP_PYPI_UPLOAD', '').lower() in ('true', '1', 'yes')
+
+    if skip_upload:
+        print(f"\n{'='*60}")
+        print("Skipping PyPI upload (SKIP_PYPI_UPLOAD is set)")
+        print(f"{'='*60}\n")
+        return True
+
     print(f"\n{'='*60}")
     print("Publishing to PyPI...")
     print(f"{'='*60}\n")
@@ -184,7 +233,13 @@ def main():
             failed_versions.append(version)
             continue
 
-        # Publish to PyPI
+        # Build package
+        if not build_package():
+            print(f"Failed to build package for version {version}")
+            failed_versions.append(version)
+            continue
+
+        # Publish to PyPI (or skip if SKIP_PYPI_UPLOAD is set)
         if not publish_to_pypi():
             print(f"Failed to publish version {version} to PyPI")
             failed_versions.append(version)

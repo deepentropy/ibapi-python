@@ -30,9 +30,11 @@ def get_existing_tags():
 
 
 def version_to_tag(version):
-    """Convert version string to git tag format"""
-    # Version like "10.37" becomes "v10.37.02" if full version is 1037.02
-    # For now, just use v prefix
+    """Convert version string to git tag format
+
+    Version string from get_download_url.py is formatted like "10.37.02" or "10.40.01"
+    We add a 'v' prefix to create tags like "v10.37.02" or "v10.40.01"
+    """
     return f"v{version}"
 
 
@@ -157,8 +159,24 @@ def ensure_branch_exists(branch_name, base_ref=None):
         return False
 
 
+def clean_working_directory():
+    """Clean untracked files that might interfere with branch switching"""
+    import shutil
+
+    # Remove __pycache__ directories
+    for root, dirs, files in os.walk('.'):
+        if '__pycache__' in dirs:
+            pycache_path = os.path.join(root, '__pycache__')
+            print(f"Removing {pycache_path}")
+            shutil.rmtree(pycache_path)
+            dirs.remove('__pycache__')  # Don't walk into removed directory
+
+
 def switch_to_branch(branch_name):
     """Switch to the specified branch"""
+    # Clean any temporary files that might interfere
+    clean_working_directory()
+
     try:
         result = subprocess.run(['git', 'checkout', branch_name], check=True, capture_output=True, text=True)
         print(f"Switched to branch '{branch_name}'")

@@ -1,2 +1,16 @@
 .idea/
 .idea/*
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Temporary files
+*.zip
+download_info.json

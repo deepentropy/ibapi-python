@@ -70,7 +70,8 @@ def extract_download_info():
                     major = full_version[0:2]
                     minor = full_version[2:4]
                     micro = full_version[4:6]
-                    version = f"{int(major)}.{int(minor)}.{int(micro)}"
+                    # Keep leading zeros in version string (e.g., "10.40.01" not "10.40.1")
+                    version = f"{int(major)}.{int(minor)}.{micro}"
                 else:
                     version = None
 

@@ -16,16 +16,16 @@ from pathlib import Path
 def extract_version_from_filename(filename):
     """Extract version number from filename like twsapi_macunix.1040.01.zip
 
-    Converts raw version like '1040.01' to parsed format '10.40.1'
+    Converts raw version like '1040.01' to parsed format '10.40.01' (preserving leading zeros)
     """
     # Extract raw version like '1040.01'
     match = re.search(r'\.(\d{4})\.(\d{2})\.zip$', filename)
     if match:
         raw_version = match.group(1) + match.group(2)
-        # Parse: 104001 -> 10.40.1
+        # Parse: 104001 -> 10.40.01 (preserve leading zero in micro)
         major = int(raw_version[0:2])
         minor = int(raw_version[2:4])
-        micro = int(raw_version[4:6])
+        micro = raw_version[4:6]  # Keep as string to preserve leading zero
         return f"{major}.{minor}.{micro}"
 
     # Try alternative pattern for older filenames
@@ -34,7 +34,7 @@ def extract_version_from_filename(filename):
         raw_version = match.group(1) + match.group(2)
         major = int(raw_version[0:2])
         minor = int(raw_version[2:4])
-        micro = int(raw_version[4:6])
+        micro = raw_version[4:6]  # Keep as string to preserve leading zero
         return f"{major}.{minor}.{micro}"
 
     raise ValueError(f"Could not extract version from filename: {filename}")
@@ -144,6 +144,21 @@ def run_git_command(cmd, check=True):
     return result.stdout.strip()
 
 
+def clean_pycache_directories(base_path):
+    """Remove all __pycache__ directories from the given path"""
+    removed_count = 0
+    for root, dirs, files in os.walk(base_path):
+        if '__pycache__' in dirs:
+            pycache_path = os.path.join(root, '__pycache__')
+            print(f"Removing {pycache_path}")
+            shutil.rmtree(pycache_path)
+            dirs.remove('__pycache__')  # Don't walk into removed directory
+            removed_count += 1
+    if removed_count > 0:
+        print(f"Removed {removed_count} __pycache__ director{'y' if removed_count == 1 else 'ies'}")
+    return removed_count
+
+
 def commit_and_tag(pythonclient_path, version, repo_path=None):
     """Commit the extracted pythonclient to git and tag it"""
     if repo_path is None:
@@ -163,6 +178,10 @@ def commit_and_tag(pythonclient_path, version, repo_path=None):
     # Copy pythonclient contents to ibapi directory
     print(f"Copying {pythonclient_path} to {ibapi_dest}...")
     shutil.copytree(pythonclient_path, ibapi_dest)
+
+    # Clean up any __pycache__ directories that might have been created
+    print("\nCleaning up __pycache__ directories...")
+    clean_pycache_directories(repo_path)
 
     # Git operations
     print("\nGit operations:")

@@ -128,9 +128,18 @@ def ensure_branch_exists(branch_name, base_ref=None):
         )
         if result.stdout.strip():
             print(f"Branch '{branch_name}' exists on remote, fetching...")
-            subprocess.run(['git', 'fetch', 'origin', f'{branch_name}:{branch_name}'], check=True, capture_output=True)
+            # Fetch the remote branch
+            subprocess.run(['git', 'fetch', 'origin', branch_name], check=True, capture_output=True)
+            # Try to create local tracking branch from remote
+            try:
+                subprocess.run(['git', 'branch', '--track', branch_name, f'origin/{branch_name}'], check=True, capture_output=True)
+                print(f"Created local tracking branch for '{branch_name}'")
+            except subprocess.CalledProcessError:
+                # Branch might already exist locally, that's ok
+                print(f"Local branch '{branch_name}' already exists")
             return True
-    except:
+    except subprocess.CalledProcessError as e:
+        print(f"Error fetching remote branch '{branch_name}': {e}")
         pass
 
     # Create new branch from base_ref if provided
@@ -151,11 +160,15 @@ def ensure_branch_exists(branch_name, base_ref=None):
 def switch_to_branch(branch_name):
     """Switch to the specified branch"""
     try:
-        subprocess.run(['git', 'checkout', branch_name], check=True, capture_output=True)
+        result = subprocess.run(['git', 'checkout', branch_name], check=True, capture_output=True, text=True)
         print(f"Switched to branch '{branch_name}'")
         return True
     except subprocess.CalledProcessError as e:
         print(f"Error switching to branch '{branch_name}': {e}")
+        if e.stderr:
+            print(f"Git stderr: {e.stderr}")
+        if e.stdout:
+            print(f"Git stdout: {e.stdout}")
         return False
 
 

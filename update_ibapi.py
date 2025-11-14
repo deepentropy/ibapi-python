@@ -14,15 +14,28 @@ from pathlib import Path
 
 
 def extract_version_from_filename(filename):
-    """Extract version number from filename like twsapi_macunix.1040.01.zip"""
-    match = re.search(r'\.(\d+\.\d+)\.zip$', filename)
-    if match:
-        return match.group(1)
+    """Extract version number from filename like twsapi_macunix.1040.01.zip
 
-    # Try alternative patterns
-    match = re.search(r'twsapi.*?(\d+\.\d+)', filename)
+    Converts raw version like '1040.01' to parsed format '10.40.1'
+    """
+    # Extract raw version like '1040.01'
+    match = re.search(r'\.(\d{4})\.(\d{2})\.zip$', filename)
     if match:
-        return match.group(1)
+        raw_version = match.group(1) + match.group(2)
+        # Parse: 104001 -> 10.40.1
+        major = int(raw_version[0:2])
+        minor = int(raw_version[2:4])
+        micro = int(raw_version[4:6])
+        return f"{major}.{minor}.{micro}"
+
+    # Try alternative pattern for older filenames
+    match = re.search(r'twsapi.*?(\d{4})\.(\d{2})', filename)
+    if match:
+        raw_version = match.group(1) + match.group(2)
+        major = int(raw_version[0:2])
+        minor = int(raw_version[2:4])
+        micro = int(raw_version[4:6])
+        return f"{major}.{minor}.{micro}"
 
     raise ValueError(f"Could not extract version from filename: {filename}")
 

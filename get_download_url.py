@@ -61,23 +61,32 @@ def extract_download_info():
                     else:
                         download_url = 'https://interactivebrokers.github.io' + download_url
 
+                # Extract version from filename (e.g., "TWS API Install 1040.01.msi" -> "10.40.01")
+                # Format: 1040.01 -> 10.40.01 or 1037.02 -> 10.37.02
+                filename_version_match = re.search(r'(\d{4})\.(\d{2})', download_url)
+                if filename_version_match:
+                    # Parse version like "1040.01" into "10.40.01"
+                    full_version = filename_version_match.group(1) + filename_version_match.group(2)
+                    major = full_version[0:2]
+                    minor = full_version[2:4]
+                    micro = full_version[4:6]
+                    version = f"{int(major)}.{int(minor)}.{int(micro)}"
+                else:
+                    version = None
+
                 # Extract button text to determine platform
                 button_text = link.get_text(strip=True)
 
-                # Determine platform from button text or cell position
+                # Determine platform from button text or URL extension
                 platform = None
                 if 'Windows' in button_text or '.msi' in download_url:
                     platform = 'Windows'
                 elif 'Mac' in button_text or 'Unix' in button_text:
                     platform = 'Mac / Unix'
 
-                # Find version and release date in the same cell
+                # Find release date in the cell
                 cell_text = cell.get_text()
-
-                version_match = re.search(r'Version:\s*(?:API\s*)?(\d+\.\d+)', cell_text)
                 date_match = re.search(r'Release Date:\s*([A-Za-z]+\s+\d+\s+\d{4})', cell_text)
-
-                version = version_match.group(1) if version_match else None
                 release_date = date_match.group(1) if date_match else None
 
                 # Find release notes link in the same cell

@@ -159,6 +159,78 @@ def clean_pycache_directories(base_path):
     return removed_count
 
 
+def fix_pyproject_toml(repo_path):
+    """Fix the pyproject.toml file downloaded from IB API source
+
+    The IB API source includes a pyproject.toml that has issues:
+    1. Uses setuptools_scm but doesn't configure it properly
+    2. Uses deprecated license format
+
+    This function rewrites it to our working configuration.
+    """
+    pyproject_path = os.path.join(repo_path, 'pyproject.toml')
+
+    if not os.path.exists(pyproject_path):
+        print(f"Warning: {pyproject_path} not found, skipping fix")
+        return
+
+    print(f"\nFixing {pyproject_path}...")
+
+    # Our corrected pyproject.toml content
+    fixed_content = """[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ibapi-python"
+dynamic = ["version"]
+description = "Interactive Brokers Python API"
+readme = "README.md"
+requires-python = ">=3.1"
+authors = [
+    {name = "Interactive Brokers LLC", email = "api@interactivebrokers.com"}
+]
+maintainers = [
+    {name = "IB API Automated Publisher"}
+]
+keywords = ["interactive brokers", "ibapi", "tws", "trading", "api"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "protobuf==5.29.3"
+]
+
+[project.urls]
+Homepage = "https://interactivebrokers.github.io/tws-api"
+Documentation = "https://ibkrcampus.com/ibkr-api-page/"
+Repository = "https://github.com/yourusername/ibapi-python"
+"Bug Tracker" = "https://github.com/yourusername/ibapi-python/issues"
+
+[tool.setuptools]
+packages = ["ibapi", "ibapi.protobuf"]
+package-dir = {"" = "ibapi"}
+
+[tool.setuptools.dynamic]
+version = {attr = "ibapi.__version__"}
+"""
+
+    with open(pyproject_path, 'w') as f:
+        f.write(fixed_content)
+
+    print("✓ pyproject.toml fixed (removed setuptools_scm, fixed license format)")
+
+
 def commit_and_tag(pythonclient_path, version, repo_path=None):
     """Commit the extracted pythonclient to git and tag it"""
     if repo_path is None:
@@ -178,6 +250,9 @@ def commit_and_tag(pythonclient_path, version, repo_path=None):
     # Copy pythonclient contents to ibapi directory
     print(f"Copying {pythonclient_path} to {ibapi_dest}...")
     shutil.copytree(pythonclient_path, ibapi_dest)
+
+    # Fix the pyproject.toml that came from IB source
+    fix_pyproject_toml(repo_path)
 
     # Clean up any __pycache__ directories that might have been created
     print("\nCleaning up __pycache__ directories...")

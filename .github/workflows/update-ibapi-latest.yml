@@ -1,0 +1,178 @@
+name: Update IB API (Latest)
+
+on:
+  # Allow manual triggering
+  workflow_dispatch:
+
+  # Run weekly on Mondays at 9 AM UTC
+  schedule:
+    - cron: '0 9 * * 1'
+
+permissions:
+  contents: write  # For pushing commits and tags
+  id-token: write  # For trusted publishing to PyPI
+
+jobs:
+  check-and-update-latest:
+    name: Check and update latest version
+    runs-on: ubuntu-latest
+
+    outputs:
+      has-new-version: ${{ steps.check.outputs.has-new-version }}
+      version: ${{ steps.check.outputs.version }}
+      tag: ${{ steps.check.outputs.tag }}
+
+    steps:
+      - name: Checkout repository (main branch)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 build
+
+      - name: Configure git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Check for latest version and update
+        id: check
+        run: |
+          # Get the latest version from IB website
+          python3 << 'EOF'
+          import sys
+          from get_download_url import extract_download_info, filter_mac_unix_downloads
+
+          downloads = extract_download_info()
+          mac_unix = filter_mac_unix_downloads(downloads)
+
+          if not mac_unix:
+              print("No downloads found")
+              sys.exit(0)
+
+          # Sort by version and get the highest (latest)
+          def parse_version(dl):
+              v = dl['version'].split('.')
+              return (int(v[0]), int(v[1]), int(v[2]))
+
+          latest = max(mac_unix, key=parse_version)
+          print(f"Latest version: {latest['version']}")
+          print(f"Download URL: {latest['url']}")
+
+          # Save to file for shell to read
+          with open('/tmp/latest_info.txt', 'w') as f:
+              f.write(f"{latest['version']}\n{latest['url']}\n")
+          EOF
+
+          # Read the version info
+          LATEST_VERSION=$(head -1 /tmp/latest_info.txt)
+          DOWNLOAD_URL=$(tail -1 /tmp/latest_info.txt)
+          TAG="v${LATEST_VERSION}"
+
+          echo "Latest version: $LATEST_VERSION"
+          echo "Tag: $TAG"
+
+          # Check if this version already exists as a tag
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, nothing to do"
+            echo "has-new-version=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "New version found: $LATEST_VERSION"
+          echo "has-new-version=true" >> $GITHUB_OUTPUT
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+          # Download and update
+          python update_ibapi.py "$DOWNLOAD_URL"
+
+      - name: Build package
+        if: steps.check.outputs.has-new-version == 'true'
+        run: |
+          # Clean old artifacts
+          rm -rf dist build *.egg-info
+
+          # Build
+          python -m build
+
+          # Verify
+          ls -lh dist/
+
+      - name: Push changes and tag
+        if: steps.check.outputs.has-new-version == 'true'
+        run: |
+          git push origin main --follow-tags
+
+      - name: Store the distribution packages
+        if: steps.check.outputs.has-new-version == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions-latest
+          path: dist/
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    if: needs.check-and-update-latest.outputs.has-new-version == 'true'
+    needs:
+      - check-and-update-latest
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/ibapi-python
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions-latest
+          path: dist/
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  create-github-release:
+    name: Create GitHub Release
+    if: needs.check-and-update-latest.outputs.has-new-version == 'true'
+    needs:
+      - check-and-update-latest
+      - publish-to-pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.check-and-update-latest.outputs.tag }}"
+          VERSION="${{ needs.check-and-update-latest.outputs.version }}"
+
+          echo "Creating release for $TAG"
+          gh release create "$TAG" \
+            --title "IB API $VERSION (Latest)" \
+            --notes "Automated release of Interactive Brokers TWS API Python client version $VERSION
+
+This is the **latest** version of the IB API.
+
+📦 Install: \`pip install ibapi-python==$VERSION\`" \
+            --verify-tag \
+            || echo "Release for $TAG already exists"

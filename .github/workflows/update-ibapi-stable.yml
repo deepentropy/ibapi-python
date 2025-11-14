@@ -1,0 +1,207 @@
+name: Update IB API (Stable)
+
+on:
+  # Allow manual triggering
+  workflow_dispatch:
+
+  # Run weekly on Mondays at 9:30 AM UTC (30 min after latest workflow)
+  schedule:
+    - cron: '30 9 * * 1'
+
+permissions:
+  contents: write  # For pushing commits and tags
+  id-token: write  # For trusted publishing to PyPI
+
+jobs:
+  check-and-update-stable:
+    name: Check and update stable versions
+    runs-on: ubuntu-latest
+
+    outputs:
+      has-new-version: ${{ steps.check.outputs.has-new-version }}
+      versions: ${{ steps.check.outputs.versions }}
+      tags: ${{ steps.check.outputs.tags }}
+
+    steps:
+      - name: Checkout repository (stable branch)
+        uses: actions/checkout@v4
+        with:
+          ref: stable
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 build
+
+      - name: Configure git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Check for stable versions and update
+        id: check
+        run: |
+          # Get all versions from IB website
+          python3 << 'EOF'
+          import sys
+          from get_download_url import extract_download_info, filter_mac_unix_downloads
+
+          downloads = extract_download_info()
+          mac_unix = filter_mac_unix_downloads(downloads)
+
+          if not mac_unix:
+              print("No downloads found")
+              sys.exit(0)
+
+          # Sort by version
+          def parse_version(dl):
+              v = dl['version'].split('.')
+              return (int(v[0]), int(v[1]), int(v[2]))
+
+          sorted_downloads = sorted(mac_unix, key=parse_version)
+
+          # Get all except the latest (latest goes to main branch)
+          if len(sorted_downloads) > 1:
+              stable_versions = sorted_downloads[:-1]  # All except the last (highest)
+          else:
+              stable_versions = []
+
+          print(f"Found {len(stable_versions)} stable version(s)")
+
+          # Save to file
+          with open('/tmp/stable_versions.txt', 'w') as f:
+              for dl in stable_versions:
+                  f.write(f"{dl['version']}|{dl['url']}\n")
+          EOF
+
+          # Check which stable versions are new
+          NEW_VERSIONS=""
+          NEW_TAGS=""
+          BUILT_ANY=false
+
+          if [ ! -s /tmp/stable_versions.txt ]; then
+            echo "No stable versions to process"
+            echo "has-new-version=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          while IFS='|' read -r VERSION URL; do
+            TAG="v${VERSION}"
+            echo "Checking version $VERSION (tag $TAG)..."
+
+            # Check if tag exists
+            if git rev-parse "$TAG" >/dev/null 2>&1; then
+              echo "  Tag $TAG already exists, skipping"
+              continue
+            fi
+
+            echo "  New stable version found: $VERSION"
+            NEW_VERSIONS="${NEW_VERSIONS}${VERSION} "
+            NEW_TAGS="${NEW_TAGS}${TAG} "
+
+            # Download and update
+            echo "  Downloading and updating..."
+            python update_ibapi.py "$URL"
+
+            # Build package
+            echo "  Building package..."
+            rm -rf dist build *.egg-info
+            python -m build
+
+            # Move built files to a version-specific directory
+            mkdir -p "/tmp/dist-${VERSION}"
+            mv dist/* "/tmp/dist-${VERSION}/"
+
+            BUILT_ANY=true
+          done < /tmp/stable_versions.txt
+
+          if [ "$BUILT_ANY" = true ]; then
+            # Combine all dist files
+            mkdir -p dist
+            find /tmp -name "dist-*" -type d -exec cp -r {}/* dist/ \;
+
+            echo "has-new-version=true" >> $GITHUB_OUTPUT
+            echo "versions=$NEW_VERSIONS" >> $GITHUB_OUTPUT
+            echo "tags=$NEW_TAGS" >> $GITHUB_OUTPUT
+            echo "New stable versions: $NEW_VERSIONS"
+          else
+            echo "has-new-version=false" >> $GITHUB_OUTPUT
+            echo "No new stable versions"
+          fi
+
+      - name: Push changes and tags
+        if: steps.check.outputs.has-new-version == 'true'
+        run: |
+          git push origin stable --follow-tags
+
+      - name: Store the distribution packages
+        if: steps.check.outputs.has-new-version == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions-stable
+          path: dist/
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    if: needs.check-and-update-stable.outputs.has-new-version == 'true'
+    needs:
+      - check-and-update-stable
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/ibapi-python
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions-stable
+          path: dist/
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  create-github-releases:
+    name: Create GitHub Releases
+    if: needs.check-and-update-stable.outputs.has-new-version == 'true'
+    needs:
+      - check-and-update-stable
+      - publish-to-pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAGS="${{ needs.check-and-update-stable.outputs.tags }}"
+
+          for TAG in $TAGS; do
+            VERSION="${TAG#v}"  # Remove 'v' prefix
+            echo "Creating release for $TAG"
+            gh release create "$TAG" \
+              --title "IB API $VERSION (Stable)" \
+              --notes "Automated release of Interactive Brokers TWS API Python client version $VERSION
+
+This is a **stable** version of the IB API.
+
+📦 Install: \`pip install ibapi-python==$VERSION\`" \
+              --verify-tag \
+              || echo "Release for $TAG already exists"
+          done

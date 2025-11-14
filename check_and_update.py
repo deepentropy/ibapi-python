@@ -171,6 +171,12 @@ def clean_working_directory():
             shutil.rmtree(pycache_path)
             dirs.remove('__pycache__')  # Don't walk into removed directory
 
+    # Remove build artifacts that cause conflicts
+    for dir_name in ['dist', 'build', 'ibapi.egg-info', 'ibapi_python.egg-info']:
+        if os.path.exists(dir_name):
+            print(f"Removing {dir_name}/")
+            shutil.rmtree(dir_name)
+
 
 def switch_to_branch(branch_name):
     """Switch to the specified branch"""

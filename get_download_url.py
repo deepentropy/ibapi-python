@@ -105,6 +105,11 @@ def extract_download_info():
     return downloads
 
 
+def filter_mac_unix_downloads(downloads):
+    """Filter to only Mac/Unix downloads (they all have same Python source)"""
+    return [d for d in downloads if d['platform'] == 'Mac / Unix']
+
+
 def display_downloads(downloads):
     """Display the download information in a readable format"""
     print(f"\nFound {len(downloads)} download(s):\n")

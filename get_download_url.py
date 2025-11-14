@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Helper script to fetch the IB API download URL from the website
+Helper script to fetch the IB API download URLs from the website
 This script should be run on a machine with unrestricted web access
 """
+import json
 import re
 import sys
 
@@ -15,8 +16,8 @@ except ImportError:
     sys.exit(1)
 
 
-def fetch_download_url():
-    """Fetch the download URL from the IB GitHub page"""
+def extract_download_info():
+    """Extract all download links with their metadata from the IB GitHub page"""
     url = "https://interactivebrokers.github.io/"
 
     headers = {
@@ -31,70 +32,107 @@ def fetch_download_url():
         print(f"Error fetching page: {e}")
         print("\nAlternative method:")
         print("1. Open https://interactivebrokers.github.io/ in your browser")
-        print("2. Find the download link in the third row of the table")
-        print("3. Right-click and copy the link address")
-        print("4. Use that URL with update_ibapi.py")
+        print("2. Find the download links in the table")
+        print("3. Manually extract the information")
         sys.exit(1)
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    # Method 1: Find rows with class 'linebottom'
+    # Find all table rows with class 'linebottom'
     rows = soup.find_all('tr', class_='linebottom')
 
-    target_row = None
-    if len(rows) >= 3:
-        # Get the third linebottom row
-        target_row = rows[2]
-        print(f"Found {len(rows)} rows with class 'linebottom'")
-    else:
-        # Method 2: Look for any row containing a zip link
-        print("Trying alternative method to find download link...")
-        all_rows = soup.find_all('tr')
-        for row in all_rows:
-            link = row.find('a', href=re.compile(r'twsapi.*\.zip$'))
+    downloads = []
+
+    for row in rows:
+        # Find all cells in the row
+        cells = row.find_all('td')
+
+        for cell in cells:
+            # Find download link (with .zip or .msi extension)
+            link = cell.find('a', href=re.compile(r'(//)?interactivebrokers\.github\.io/downloads/(tws|TWS).*\.(zip|msi)$', re.IGNORECASE))
+
             if link:
-                target_row = row
-                break
+                download_url = link['href']
 
-    if not target_row:
-        print("Could not find the target row with download link")
-        print("\nFound links:")
-        all_links = soup.find_all('a', href=re.compile(r'\.zip$'))
-        for link in all_links:
-            print(f"  {link.get('href')} - {link.text}")
+                # Make sure it's an absolute URL
+                if not download_url.startswith('http'):
+                    if download_url.startswith('//'):
+                        download_url = 'https:' + download_url
+                    else:
+                        download_url = 'https://interactivebrokers.github.io' + download_url
+
+                # Extract button text to determine platform
+                button_text = link.get_text(strip=True)
+
+                # Determine platform from button text or cell position
+                platform = None
+                if 'Windows' in button_text or '.msi' in download_url:
+                    platform = 'Windows'
+                elif 'Mac' in button_text or 'Unix' in button_text:
+                    platform = 'Mac / Unix'
+
+                # Find version and release date in the same cell
+                cell_text = cell.get_text()
+
+                version_match = re.search(r'Version:\s*(?:API\s*)?(\d+\.\d+)', cell_text)
+                date_match = re.search(r'Release Date:\s*([A-Za-z]+\s+\d+\s+\d{4})', cell_text)
+
+                version = version_match.group(1) if version_match else None
+                release_date = date_match.group(1) if date_match else None
+
+                # Find release notes link in the same cell
+                release_notes_link = cell.find('a', href=re.compile(r'releasenotes'))
+                release_notes_url = None
+                if release_notes_link:
+                    release_notes_url = release_notes_link['href']
+                    if release_notes_url.startswith('//'):
+                        release_notes_url = 'https:' + release_notes_url
+
+                download_info = {
+                    'url': download_url,
+                    'version': version,
+                    'release_date': release_date,
+                    'platform': platform,
+                    'release_notes': release_notes_url
+                }
+
+                downloads.append(download_info)
+
+    if not downloads:
+        print("Could not find any download links")
         sys.exit(1)
 
-    # Find the link in the row
-    link = target_row.find('a', href=True)
+    return downloads
 
-    if not link:
-        print("Could not find download link in the target row")
-        sys.exit(1)
 
-    download_url = link['href']
+def display_downloads(downloads):
+    """Display the download information in a readable format"""
+    print(f"\nFound {len(downloads)} download(s):\n")
 
-    # Make sure it's an absolute URL
-    if not download_url.startswith('http'):
-        base_url = 'https://interactivebrokers.github.io'
-        download_url = base_url + ('/' if not download_url.startswith('/') else '') + download_url
+    for i, dl in enumerate(downloads, 1):
+        print(f"{i}. Platform: {dl['platform']}")
+        print(f"   Version: {dl['version']}")
+        print(f"   Release Date: {dl['release_date']}")
+        print(f"   Download URL: {dl['url']}")
+        if dl['release_notes']:
+            print(f"   Release Notes: {dl['release_notes']}")
+        print()
 
-    filename = download_url.split('/')[-1]
+    # Also save to JSON file
+    output_file = 'download_info.json'
+    with open(output_file, 'w') as f:
+        json.dump(downloads, f, indent=2)
+    print(f"Download information saved to {output_file}")
 
-    print(f"\nSuccess!")
-    print(f"  Download URL: {download_url}")
-    print(f"  Filename: {filename}")
-
-    # Extract version
-    match = re.search(r'\.(\d+\.\d+)\.zip$', filename)
-    if match:
-        version = match.group(1)
-        print(f"  Version: {version}")
-
-    print(f"\nTo update the IB API, run:")
-    print(f"  python update_ibapi.py {download_url}")
-
-    return download_url
+    # Show example usage
+    if downloads:
+        mac_unix_downloads = [d for d in downloads if d['platform'] == 'Mac / Unix']
+        if mac_unix_downloads:
+            latest = mac_unix_downloads[0]
+            print(f"\nTo update to the latest Mac/Unix version, run:")
+            print(f"  python update_ibapi.py {latest['url']}")
 
 
 if __name__ == "__main__":
-    fetch_download_url()
+    downloads = extract_download_info()
+    display_downloads(downloads)

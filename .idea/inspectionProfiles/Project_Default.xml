@@ -1,0 +1,65 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="DuplicatedCode" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <Languages>
+        <language minSize="161" name="Python" />
+      </Languages>
+    </inspection_tool>
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="scikit-learn" />
+          <option value="statsmodels" />
+          <option value="mpire" />
+          <option value="arch" />
+          <option value="cupy" />
+          <option value="xgboost" />
+          <option value="s3fs" />
+          <option value="boto3" />
+          <option value="ibapi" />
+          <option value="Backtesting" />
+          <option value="ib_insync" />
+          <option value="tslearn" />
+          <option value="cointanalysis" />
+          <option value="yfinance" />
+          <option value="hurst" />
+          <option value="seaborn" />
+          <option value="pandas_market_calendars" />
+          <option value="backtesting" />
+          <option value="brotli" />
+          <option value="bs4" />
+          <option value="datetime" />
+          <option value="grequests" />
+          <option value="pdf2image" />
+          <option value="opencv-python" />
+          <option value="openai" />
+          <option value="lightgbm" />
+          <option value="finvizfinance" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N806" />
+          <option value="N803" />
+          <option value="N802" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyStubPackagesAdvertiser" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="pandas-stubs==2.2.3.250527" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnboundLocalVariableInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
+      <option name="processCode" value="true" />
+      <option name="processLiterals" value="true" />
+      <option name="processComments" value="true" />
+    </inspection_tool>
+  </profile>
+</component>

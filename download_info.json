@@ -1,0 +1,30 @@
+[
+  {
+    "url": "https://interactivebrokers.github.io/downloads/TWS API Install 1037.02.msi",
+    "version": "10.37",
+    "release_date": "May 28 2025",
+    "platform": "Windows",
+    "release_notes": "https://ibkrguides.com/releasenotes/tws-api.htm"
+  },
+  {
+    "url": "https://interactivebrokers.github.io/downloads/twsapi_macunix.1037.02.zip",
+    "version": "10.37",
+    "release_date": "May 28 2025",
+    "platform": "Mac / Unix",
+    "release_notes": "https://ibkrguides.com/releasenotes/tws-api.htm"
+  },
+  {
+    "url": "https://interactivebrokers.github.io/downloads/TWS API Install 1040.01.msi",
+    "version": "10.40",
+    "release_date": "Sep 15 2025",
+    "platform": "Windows",
+    "release_notes": "https://ibkrguides.com/releasenotes/tws-api.htm"
+  },
+  {
+    "url": "https://interactivebrokers.github.io/downloads/twsapi_macunix.1040.01.zip",
+    "version": "10.40",
+    "release_date": "Sep 15 2025",
+    "platform": "Mac / Unix",
+    "release_notes": "https://ibkrguides.com/releasenotes/tws-api.htm"
+  }
+]

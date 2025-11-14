@@ -1,0 +1,321 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-lt-installed="true"><head>
+<title>Interactive Brokers - API Software</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<script src="/scripts/common/js/design.js" type="text/javascript"></script>
+<link href="//www.interactivebrokers.com/stylesheet/web/bootstrap.v3.3.6.css?ver=1" rel="stylesheet" type="text/css" media="screen">
+<link href="//www.interactivebrokers.com/stylesheet/new/V3_reset.css" rel="stylesheet" type="text/css" media="screen">
+<link href="//www.interactivebrokers.com/stylesheet/new/V3_template.css" rel="stylesheet" type="text/css" media="screen">
+<link href="//www.interactivebrokers.com/stylesheet/new/V3_buttons.css" rel="stylesheet" type="text/css" media="screen">
+
+<script src="js/jquery-1.9.1.min.js"></script>
+<script src="js/jquery-migrate-1.1.1.min.js"></script>
+
+<link id="ib-common-css" href="//www.interactivebrokers.com/stylesheet/web/ib-common.css?ver=1" rel="stylesheet" type="text/css" media="screen">
+
+
+</head>
+<body>
+<style type="text/css">
+html {
+	margin:0px;
+	padding:0px;
+	background-color:#FFFFFF;
+}
+body {
+	margin:0px;
+	padding:0px;
+}
+.header {
+	z-index:0;
+	left:auto;
+	right:auto;
+	margin:0px auto;
+	width:980px;
+	height:50px;
+	background:none;
+	text-align:left;
+}
+.popupheader {
+	position:relative;
+	margin:0px;
+	padding:10px 20px 6px 20px;
+	width:940px;
+	height:40px;
+	background-color:#000033;
+	border-radius:10px 10px 0px 0px;
+	-moz-border-radius:10px 10px 0px 0px;
+	-webkit-border-radius:10px 10px 0px 0px;
+}
+.iblogoprint {
+	position:absolute;
+	top:4px;
+	left:15px;
+}
+.iblogoprint a, .iblogoprint a:visited, .iblogoprint a:hover, .iblogoprint a:hover, .iblogoprint a:active, .iblogoprint a:focus {
+	margin:0px;
+	padding:0px;
+	text-decoration:none;
+	outline:none;
+}
+.printpdfbuttons {
+	position:absolute;
+	top:0px;
+	right:20px;
+}
+
+.container {
+	margin:20px auto 20px auto;
+	padding:0px 0px 20px 0px;
+	width:980px;
+	height:auto;
+	background:#FFFFFF;
+	border:1px solid #CCC;
+	border-radius:10px 10px 10px 10px;
+	-moz-border-radius:10px 10px 10px 10px;
+	-webkit-border-radius:10px 10px 10px 10px;
+}
+.containercontent {
+	margin:0px auto;
+	padding:10px 10px 10px 10px;
+	width:960px;
+	height:auto;
+}
+#contents {
+	position:relative;
+	z-index:100;
+	margin:0px;
+	padding:0px;
+}
+
+#sssfirst {list-style:none;}
+
+.agreement {
+  width: 750px;
+  height: 400px;
+  overflow-y: scroll;
+  border:1px solid #999;
+  margin:20px 0;
+  padding:10px;
+  text-align:left
+}
+#hidden_content{display:none;}
+
+a.btn-default, a.btn-default:focus {
+	background-color:#FCFCFC;
+	border-color:#ECECEC;
+	color:#555555;
+}
+
+a.btn {
+	font-weight:600;
+	font-size:12px;
+	font-family:'Source Sans Pro', Arial, Verdana, sans-serif;
+	text-transform:uppercase;
+	border:1px solid transparent;
+	border-radius:2px;
+}
+
+a.btn-sm, a.btn-group-sm > .btn {
+	padding:3px 12px;
+	font-size:11px;
+	line-height:1.2;
+}
+
+*{box-sizing:content-box}
+</style>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#agree").click(function() {
+
+    }).click(function(){
+        $("#hidden_content").slideToggle("slow");
+		$("#terms").slideToggle("slow");
+    });
+});
+
+</script>
+
+
+<div class="container">
+<div class="header">
+  <div class="popupheader">
+    <div class="iblogoprint"> <a href="//www.interactivebrokers.com" target="_top" title="Go to Interactive Brokers' Main Site"><img src="//www.interactivebrokers.com/images/common/iblogo_printheader.png" alt="IB Logo" border="0"></a></div>
+    <div class="printpdfbuttons">
+      <h1>API Software</h1>
+    </div>
+  </div>
+</div>
+<div class="containercontent">
+
+
+<div id="terms" align="center">
+<div class="agreement">
+<h3>TWS API Non-Commercial License</h3>
+
+<p>This TWS API Non-Commercial License ("License") is an agreement between Interactive Brokers LLC ("IB") and You, and governs Your use of the API Code.  By clicking the "I AGREE" button below, you acknowledge that You consent to be legally bound by this Agreement.</p>
+
+<p>0.	Introduction. IB has developed application program interface ("API") code to permit its customers to use their own internal proprietary software tools in managing their accounts with IB.  This License is intended only for users who wish to use the API Code by itself as is, or in connection with or for the development of their own internal proprietary tools to manage their own IB accounts.  This License is NOT for anybody who is developing software applications that they wish to: (a) sell to third party users for a fee, or (b) give to third party users to generate an indirect financial benefit (e.g., commissions).  If You wish to make a software application for the purposes described in the preceding sentence then please contact <a href="mailto:opensource@interactivebrokers.com">Shail Mangla at opensource@interactivebrokers.com</a>.</p>
+
+<p></p><h4>1.	Definitions.  </h4><p></p>
+
+<p>1.1.	"API Code" means the client code for IB's Trader Workstation API that is made available to You. </p>
+
+<p>1.2.	"Non-Commercial Purposes" means using API Code by itself as is, or in connection with or for the development of applications, programs, or other works that (a) interface with IB's trading platform, and (b) allow You to access Your account information, access market data, perform analytics, enter orders, or perform any other transactions or functions all in connection with Your account at IB. </p>
+
+<p>1.3.	"You" or "Your" means an individual or a legal entity exercising rights under this License.  For legal entities, "You" or "Your" includes any entity which controls, is controlled by, or is under common control with, You, where "control" means (a) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (b) ownership of fifty percent (50%) or more of the outstanding shares or beneficial ownership of such entity.</p>
+
+<p></p><h4>2.	License Grant.</h4> <p></p>
+
+<p>2.1.	Subject to the terms of this License, IB hereby grants You, effective on the date You accept this License and download the API Code, a personal, royalty-free, non-exclusive, non-sublicensable, non-transferable, restricted right and license to install, modify and use the API Code solely for Non-Commercial Purposes.  </p>
+
+<p></p><h4>3.	Restrictions.</h4><p></p>
+
+<p>3.1.	You acknowledge and agree that You shall only use the API Code for Non-Commercial Purposes.  Any other uses of the API Code are expressly prohibited.</p>
+
+<p>3.2.	You must retain and reproduce in all copies of API Code the copyright and other proprietary notices and disclaimers of IB as they appear in the API Code, and keep intact all notices in the API Code that refer to this License.</p>
+
+<p>3.3.	You agree not to publish, disseminate, or redistribute the API Code to any third party. </p>
+
+<p>3.4.	You agree that You will maintain an account at IB for the duration of this License.</p>
+
+<p>3.5.	You agree not to use the API for any purpose that violates any law or regulation, any right of any person, including but not limited to intellectual property rights, rights of privacy, or rights of personality, or in any manner inconsistent with IB's terms of use, privacy policy or this License.</p>
+
+<p></p><h4>4.	Ownership of API Code.</h4> <p></p>
+
+<p>4.1.	Except as expressly set forth herein, IB or its licensors shall own all right, title and interest in and to the API Code.  </p>
+
+<p></p><h4>5.	DISCLAIMER OF WARRANTIES.</h4><p></p>
+
+<p>5.1.	You expressly acknowledge and agree that although IB grants the license to the API Code set forth herein, IB and its licensors provide no assurances that the API Code does not infringe the patent or other intellectual property rights of any other entity.  IB and its licensors disclaim any liability to You for claims brought by any other person or entity based on infringement of intellectual property rights or otherwise.</p>
+
+<p>5.2.	The API Code may contain in whole or in part pre-release, untested, or not fully tested works.  The API Code may contain errors that could cause failures or loss of data, and may be incomplete or contain inaccuracies.  You expressly acknowledge and agree that use of the API Code, or any portion thereof, is at Your sole and entire risk.  YOU UNDERSTAND AND AGREE THAT THE API CODE IS PROVIDED "AS IS" AND ON AN "AS-AVAILABLE" BASIS, WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, WARRANTIES THAT THE API CODE IS FREE OF DEFECTS, MERCHANTABLE, NON-INFRINGING OR FIT FOR A PARTICULAR PURPOSE.  THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.  NO USE OF ANY API CODE IS AUTHORIZED HEREUNDER EXCEPT UNDER THIS DISCLAIMER.</p>
+
+<p></p><h4>6.	LIMITATION OF LIABILITY.</h4><p></p>
+
+6.1.	YOU UNDERSTAND AND AGREE THAT IB, ITS AFFILIATES, AND ITS LICENSORS SHALL NOT BE LIABLE TO YOU UNDER ANY THEORY OF LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR EXEMPLARY DAMAGES IN CONNECTION WITH OR ARISING OUT OF OR RELATING TO THE API CODE OR THE USE OF THE API CODE, INCLUDING ANY TRADING LOSS, LOSS OF PROFIT, LOSS OF BUSINESS, OR LOSS OF DATA, WHETHER OR NOT IB OR ITS REPRESENTATIVES HAVE BEEN ADVISED OF OR SHOULD HAVE BEEN AWARE OF THE POSSIBILITY OF ANY SUCH LOSSES ARISING.<p></p>
+
+<p></p><h4>7.	Indemnification.</h4><p></p>
+
+<p>7.1.	To the maximum extent permitted by law, You agree to defend, indemnify and hold harmless IB, its affiliates and their respective directors, officers, employees and agents from and against any and all claims, actions, suits or proceedings, as well as any and all losses, liabilities, damages, costs and expenses (including reasonable attorneys fees) arising out of or accruing from (a) Your use of the API Code, (b) any application You develop with the API Code that infringes any copyright, trademark, trade secret, trade dress, patent or other intellectual property right of any person, and (c) any non-compliance by You with this License.</p>
+
+<p></p><h4>8.	Termination.</h4><p></p>
+
+<p>8.1.	This License and the rights granted hereunder will terminate automatically: (a) if You fail to comply with any term(s) of this License and fail to cure such breach within 30 days of becoming aware of such breach; (b) if You are no longer a customer of IB; or (c) if You, at any time during the term of this License, commence an action for patent infringement against IB (provided that IB did not first commence an action for patent infringement against You in that instance).</p>
+
+<p>8.2.	You shall destroy all copies of the API Code upon termination of this License, and shall not retain the API Code in any form after such destruction.</p>
+
+<p>8.3.	The following sections shall survive any termination: 3, 4, 5, 6, 7, 8, and 9.</p>
+
+<p></p><h4>9.	General.</h4><p></p>
+
+<p>9.1.	You agree that if IB does not exercise or enforce any legal right or remedy which is contained in this License or is available to IB under any applicable law), this will not be taken to be a formal waiver of IB's rights and that those rights or remedies will still be available to IB.</p>
+
+<p>9.2.	If any court of law, having the jurisdiction to decide on this matter, rules that any provision of this License is invalid, then that provision will be removed from this License without affecting the rest of this License. The remaining provisions of this License will continue to be valid and enforceable.</p>
+
+<p>9.3.	This License constitutes the whole legal agreement between You and IB and governs Your use of the API Code, and completely replaces any prior agreements between You and IB in relation to the API Code.</p>
+
+<p>9.4.	If You are entering into this Agreement on behalf of your employer or other entity, You represent and warrant that You have full legal authority to bind your employer or such entity to this Agreement.</p>
+
+<p>9.5.	You may not assign the rights granted in this License without IB's prior written approval.</p>
+
+<p>9.6.	This License shall be governed by the laws of the State of Connecticut without regard to its conflicts of laws provisions.  You agree to submit to the exclusive jurisdiction of the courts located within the county of Fairfield, Connecticut to resolve any legal matter arising from this License.  Notwithstanding this, You agree that IB shall be allowed to apply for injunctive remedies in any jurisdiction.</p>
+
+
+
+</div>
+
+
+
+<a href="#" id="agree" class="button darkblue">I Agree</a><span style="padding-left:30px">&nbsp;</span><a href="//www.github.com" class="button darkblue">Disagree</a></div>
+
+
+
+<div id="hidden_content">
+
+
+
+
+<div id="contents"> <br>
+  <div id="toptabs">
+    <ul class="ui-tabs-nav">
+      <li class="noprint"> <a href="#" class="selected"><span>Download</span></a></li>
+      <li class="noprint"> <a href="api_software_contribute.html"><span>Contribute</span></a></li>
+    </ul>
+    <div class="clear space_20"></div>
+    <div class="grid_16">
+      <div class="comm_table">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="comm_table_bkgrnd">
+
+          <tbody><tr class="borderbottom">
+            <td width="26%" align="center" valign="middle" class="comm_table_header borderright">Windows</td>
+            <td width="25%" align="center" valign="middle" class="comm_table_header">Mac / Unix</td>
+          </tr>
+
+          <!-- first row-->
+          <tr class="linebottom">
+            <td align="center" valign="middle" class="comm_table_content borderright"><a href="//interactivebrokers.github.io/downloads/TWS API Install 1037.02.msi" target="_blank" class="button darkblue" style="width:190px;">TWS API <span style="font-weight:normal;">Stable</span> for Windows</a><br>
+              <p class="center">
+              Version: <strong>API 10.37</strong>
+              <br>Release Date: <strong>May 28 2025</strong>
+
+              <br><a class="btn btn-sm btn-default fancybox" href="//ibkrguides.com/releasenotes/tws-api.htm" target="_blank">Release Notes</a>
+                </p></td>
+
+            <td align="center" valign="middle" class="comm_table_content"><a href="//interactivebrokers.github.io/downloads/twsapi_macunix.1037.02.zip" target="_blank" class="button darkblue" style="width:190px;">TWS API <span style="font-weight:normal;">Stable</span> for Mac/Unix</a><br>
+              <p class="center">Version: <strong>API 10.37</strong><br>
+                Release Date: <strong>May 28 2025</strong>
+              <br><a class="btn btn-sm btn-default fancybox" href="//ibkrguides.com/releasenotes/tws-api.htm" target="_blank">Release Notes</a>
+                </p></td>
+          </tr>
+
+          <!-- second row-->
+          <tr class="linebottom">
+
+            <td align="center" valign="middle" class="comm_table_content borderright"><a href="//interactivebrokers.github.io/downloads/TWS API Install 1040.01.msi" target="_blank" class="button black" style="width:190px;">TWS API <span style="font-weight:normal;">Latest</span> for Windows</a><br>
+              <p class="center">Version: <strong>API 10.40</strong><br>
+                Release Date: <strong>Sep 15 2025</strong><br>
+                <a class="btn btn-sm btn-default fancybox" href="//ibkrguides.com/releasenotes/tws-api.htm" target="_blank">Release Notes</a>
+                </p></td>
+            <td align="center" valign="middle" class="comm_table_content"><a href="//interactivebrokers.github.io/downloads/twsapi_macunix.1040.01.zip" target="_blank" class="button black" style="width:190px;">TWS API <span style="font-weight:normal;">Latest</span> for Mac / Unix</a>
+              <p class="center">Version: <strong>API 10.40</strong><br>
+                Release Date: <strong>Sep 15 2025</strong><br>
+                <a class="btn btn-sm btn-default fancybox" href="//ibkrguides.com/releasenotes/tws-api.htm" target="_blank">Release Notes</a>
+                </p></td>
+          </tr>
+
+          <!-- third row-->
+          <tr class="linebottom">
+            <td align="center" colspan="2" valign="middle" class="comm_table_content borderright"><a href="//interactivebrokers.github.io/api_software_contribute.html" target="_blank" class="button black" style="width:190px;">TWS API <span style="font-weight:normal;">Beta</span></a><br>
+          </td></tr><tr class="linebottom">
+            <td>
+            </td><td align="center" valign="middle" class="comm_table_content borderright"><a href="https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#unix-install" target="_blank">Click for Mac / Unix Instructions</a> </td>
+          </tr>
+
+          <tr class="linebottom">
+            <td align="center" valign="middle" class="comm_table_content borderright"><p class="center" style="font-size:10px">The API Stable for Windows includes the Java, C++, C#/.NET, ActiveX, and DDE APIs, along with sample code and spreadsheets. The API Latest for Windows (v1040) additionally includes the Python API.
+           </p></td>
+            <td colspan="2" align="center" valign="middle" class="comm_table_content"><p class="center" style="font-size:10px">The API Stable for Mac/Unix (v1037) includes the Java and Posix C++ API source and sample. The API Latest for Mac/Unix (v1040) additionally includes the Python API. (Excel APIs are only available on Windows)
+           </p></td>
+          </tr>
+
+          <tr>
+            <td colspan="3" align="center" valign="middle" class="comm_table_content"><p class="center"><strong>Support:</strong> <a href="//ibkrcampus.com/ibkr-api-page/" target="_blank" class="link">API Reference Guide</a><br><i>Recommended TWS or IB Gateway version: <strong>1037 or higher</strong> (for comprehensive feature support)
+</i></p></td>
+          </tr>
+
+        </tbody></table>
+      </div>
+      <br>
+      <div class="notes">
+        <p><strong>Note:</strong></p>
+        <p>As a reminder, the use of the TWS API as a means of disseminating information, including market data or any other licensed or copyrighted information, to third parties or non-registered IB customers is strictly prohibited without prior written approval of Interactive Brokers.</p>
+      </div>
+    </div>
+    <div class="clear"></div>
+  </div>
+</div></div>
+
+
+</div></div><protonpass-root-9464 data-protonpass-role="root" data-protonpass-theme="os"></protonpass-root-9464></body></html>

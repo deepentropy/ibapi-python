@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ibapi"
+dynamic = ["version"]
+description = "Interactive Brokers Python API"
+readme = "README.md"
+requires-python = ">=3.1"
+license = {text = "IB API Non-Commercial License or the IB API Commercial License"}
+authors = [
+    {name = "Interactive Brokers LLC", email = "api@interactivebrokers.com"}
+]
+maintainers = [
+    {name = "IB API Automated Publisher"}
+]
+keywords = ["interactive brokers", "ibapi", "tws", "trading", "api"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "protobuf==5.29.3"
+]
+
+[project.urls]
+Homepage = "https://interactivebrokers.github.io/tws-api"
+Documentation = "https://ibkrcampus.com/ibkr-api-page/"
+Repository = "https://github.com/yourusername/ibapi-python"
+"Bug Tracker" = "https://github.com/yourusername/ibapi-python/issues"
+
+[tool.setuptools]
+packages = ["ibapi", "ibapi.protobuf"]
+package-dir = {"" = "ibapi"}
+
+[tool.setuptools.dynamic]
+version = {attr = "ibapi.__version__"}

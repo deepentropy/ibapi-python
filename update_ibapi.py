@@ -9,6 +9,7 @@ import zipfile
 import shutil
 import requests
 import subprocess
+import tempfile
 from pathlib import Path
 
 
@@ -55,8 +56,11 @@ def download_file(url, dest_path):
     return dest_path
 
 
-def extract_pythonclient(zip_path, extract_to='/tmp'):
+def extract_pythonclient(zip_path, extract_to=None):
     """Extract the pythonclient directory from the zip file"""
+    if extract_to is None:
+        extract_to = tempfile.gettempdir()
+
     print(f"\nExtracting {zip_path}...")
 
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -127,9 +131,12 @@ def run_git_command(cmd, check=True):
     return result.stdout.strip()
 
 
-def commit_and_tag(pythonclient_path, version, repo_path='/home/user/ibapi-python'):
+def commit_and_tag(pythonclient_path, version, repo_path=None):
     """Commit the extracted pythonclient to git and tag it"""
-    print(f"\nCommitting to git repository...")
+    if repo_path is None:
+        repo_path = os.getcwd()
+
+    print(f"\nCommitting to git repository at {repo_path}...")
 
     # Change to repo directory
     os.chdir(repo_path)
@@ -210,12 +217,16 @@ def main():
         version = extract_version_from_filename(filename)
         print(f"\nDetected version: {version}")
 
+        # Create temporary directory for download
+        temp_dir = tempfile.gettempdir()
+        zip_path = os.path.join(temp_dir, filename)
+        print(f"Using temporary directory: {temp_dir}")
+
         # Download the zip file
-        zip_path = f"/tmp/{filename}"
         download_file(download_url, zip_path)
 
         # Extract pythonclient
-        pythonclient_path = extract_pythonclient(zip_path)
+        pythonclient_path = extract_pythonclient(zip_path, extract_to=temp_dir)
         print(f"Extracted to: {pythonclient_path}")
 
         # Commit and tag
@@ -223,15 +234,18 @@ def main():
 
         # Clean up
         print(f"\nCleaning up temporary files...")
-        os.remove(zip_path)
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+            print(f"Removed: {zip_path}")
 
         # Clean up extracted directory
         base_dir = pythonclient_path
-        while base_dir != '/tmp' and base_dir != '/':
+        while base_dir and base_dir != temp_dir and os.path.exists(base_dir):
             parent = os.path.dirname(base_dir)
-            if parent == '/tmp':
+            if parent == temp_dir or not parent:
                 if os.path.exists(base_dir):
                     shutil.rmtree(base_dir)
+                    print(f"Removed: {base_dir}")
                 break
             base_dir = parent
 

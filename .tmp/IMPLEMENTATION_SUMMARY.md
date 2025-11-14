@@ -68,40 +68,59 @@ Complete documentation rewrite:
 ## Version Management Strategy
 
 ### Architecture
-- **Single main branch** with git tags
+- **Two branches**: `main` (Latest) and `stable` (Stable)
 - **Both Stable and Latest** published to PyPI
-- **Process both versions** when found (Stable first, Latest last)
+- **Highest version number** = Latest → `main` branch
+- **All other versions** = Stable → `stable` branch
 - **Exit silently** if no updates
 
 ### Workflow
-1. Weekly: GitHub Actions runs `check_and_update.py` on main branch
+1. Weekly: GitHub Actions runs `check_and_update.py`
 2. Script fetches IB website, finds versions like:
-   - Stable: 10.37.02
-   - Latest: 10.40.01
-3. Compares with existing git tags (`v10.37.02`, `v10.40.01`, etc.)
-4. For each NEW version:
+   - Stable: 10.37.2
+   - Latest: 10.40.1
+3. Determines highest version (10.40.1 = Latest)
+4. Compares with existing git tags (`v10.37.2`, `v10.40.1`, etc.)
+5. For each NEW version:
+   - Determines target branch based on version number
+   - Switches to appropriate branch (`main` or `stable`)
    - Downloads Mac/Unix zip file
    - Extracts Python source (`IBJts/source/pythonclient`)
    - Updates VERSION dict in `__init__.py`
-   - Commits to main: `"Update IB API to version X.Y.Z"`
+   - Commits: `"Update IB API to version X.Y.Z"`
    - Tags: `vX.Y.Z`
    - Builds package
    - Publishes to PyPI
    - GitHub Actions creates release
-5. Main branch ends with Latest version (since it's processed last)
+6. Pushes both branches and tags to GitHub
 
 ### User Experience
 ```bash
-# Install latest
+# Install latest version (highest version number)
 pip install ibapi
 
 # Install specific version
-pip install ibapi==10.37.2
-pip install ibapi==10.40.1
+pip install ibapi==10.37.2  # Stable
+pip install ibapi==10.40.1  # Latest
+
+# Clone from main branch (Latest)
+git clone https://github.com/user/ibapi-python.git
+# main branch contains: 10.40.1
+
+# Clone from stable branch (Stable)
+git clone -b stable https://github.com/user/ibapi-python.git
+# stable branch contains: 10.37.2
 
 # Install from git tag
-pip install git+https://github.com/user/ibapi-python.git@v10.37.02
+pip install git+https://github.com/user/ibapi-python.git@v10.37.2
+pip install git+https://github.com/user/ibapi-python.git@v10.40.1
 ```
+
+### Version Routing Logic
+- **10.40.1** (highest) → `main` branch → tagged as `v10.40.1`
+- **10.37.2** (lower) → `stable` branch → tagged as `v10.37.2`
+- If **10.38.1** released later → `stable` branch → tagged as `v10.38.1` (main unchanged)
+- If **10.41.0** released later → `main` branch → tagged as `v10.41.0` (stable unchanged)
 
 ## Next Steps
 
@@ -166,7 +185,6 @@ pip install git+https://github.com/user/ibapi-python.git@v10.37.02
 ```
 ┌─────────────────────────────────────────────────────┐
 │  GitHub Actions (Weekly: Mon 9AM UTC)               │
-│  Runs on: main branch                               │
 └────────────────┬────────────────────────────────────┘
                  │
                  v
@@ -176,31 +194,46 @@ pip install git+https://github.com/user/ibapi-python.git@v10.37.02
                  │   └─> Fetch IB website
                  │       └─> Filter Mac/Unix versions
                  │
+                 ├─> Determine highest version (Latest)
+                 │   └─> All others = Stable
+                 │
                  ├─> Compare with git tags
                  │   └─> Find new versions
                  │
                  └─> For each new version:
+                     │
+                     ├─> Determine target branch
+                     │   ├─> Highest version → main
+                     │   └─> Others → stable
+                     │
+                     ├─> Switch to branch
+                     │   └─> Create if doesn't exist
                      │
                      ├─> update_ibapi.py
                      │   ├─> Download zip
                      │   ├─> Extract Python source
                      │   ├─> Update VERSION in __init__.py
                      │   ├─> Copy to ibapi/
-                     │   ├─> Commit to main
+                     │   ├─> Commit to branch
                      │   └─> Tag: vX.Y.Z
                      │
-                     └─> publish_to_pypi.py
-                         ├─> Build package (setup.py)
-                         ├─> Upload to PyPI (twine)
-                         └─> Create GitHub release
+                     ├─> Build package (python -m build)
+                     │
+                     └─> GitHub Actions:
+                         ├─> Push main branch
+                         ├─> Push stable branch
+                         ├─> Push all tags
+                         ├─> Upload to PyPI (trusted publishing)
+                         └─> Create GitHub releases
 ```
 
 ## Success Criteria
 - ✅ Weekly automation runs on schedule
 - ✅ New versions detected automatically
-- ✅ Commits go to main branch
+- ✅ Highest version → `main` branch, others → `stable` branch
 - ✅ Git tags created for each version
 - ✅ Packages published to PyPI
 - ✅ GitHub releases created
 - ✅ System exits silently if no updates
 - ✅ Both Stable and Latest versions processed
+- ✅ Branches never regress (no version downgrade)

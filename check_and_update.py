@@ -75,6 +75,80 @@ def sort_versions(downloads):
     return sorted(downloads, key=version_key)
 
 
+def get_highest_version(downloads):
+    """Find the highest version number (Latest)"""
+    if not downloads:
+        return None
+
+    sorted_downloads = sort_versions(downloads)
+    return sorted_downloads[-1]['version']  # Last one is highest
+
+
+def is_latest_version(version, all_downloads):
+    """Check if a version is the Latest (highest version number)"""
+    highest = get_highest_version(all_downloads)
+    return version == highest
+
+
+def get_target_branch(version, all_downloads):
+    """Determine which branch this version should be committed to"""
+    if is_latest_version(version, all_downloads):
+        return "main"
+    else:
+        return "stable"
+
+
+def ensure_branch_exists(branch_name):
+    """Ensure a branch exists, create it if it doesn't"""
+    try:
+        # Check if branch exists locally
+        result = subprocess.run(
+            ['git', 'rev-parse', '--verify', branch_name],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            print(f"Branch '{branch_name}' already exists locally")
+            return True
+    except:
+        pass
+
+    # Check if branch exists on remote
+    try:
+        result = subprocess.run(
+            ['git', 'ls-remote', '--heads', 'origin', branch_name],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        if result.stdout.strip():
+            print(f"Branch '{branch_name}' exists on remote, checking out...")
+            subprocess.run(['git', 'fetch', 'origin', f'{branch_name}:{branch_name}'], check=True)
+            return True
+    except:
+        pass
+
+    # Create new branch
+    print(f"Creating new branch '{branch_name}'...")
+    try:
+        subprocess.run(['git', 'checkout', '-b', branch_name], check=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Error creating branch '{branch_name}': {e}")
+        return False
+
+
+def switch_to_branch(branch_name):
+    """Switch to the specified branch"""
+    try:
+        subprocess.run(['git', 'checkout', branch_name], check=True, capture_output=True)
+        print(f"Switched to branch '{branch_name}'")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Error switching to branch '{branch_name}': {e}")
+        return False
+
+
 def update_version(download_url):
     """Run update_ibapi.py to download, extract, and commit a version"""
     print(f"\n{'='*60}")
@@ -210,28 +284,49 @@ def main():
     # Sort versions (oldest first, so we process Stable before Latest)
     new_versions = sort_versions(new_versions)
 
+    # Determine highest version (Latest)
+    highest_version = get_highest_version(downloads)
+    print(f"\nHighest version (Latest): {highest_version}")
+
     print(f"\nFound {len(new_versions)} new version(s) to process:")
     for dl in new_versions:
-        print(f"  - {dl['version']} ({dl['release_date']})")
+        target_branch = get_target_branch(dl['version'], downloads)
+        print(f"  - {dl['version']} ({dl['release_date']}) → branch '{target_branch}'")
 
     # Step 4: Process each new version
     print("\nStep 4: Processing new versions...")
     success_count = 0
     failed_versions = []
+    branches_updated = set()
 
     for dl in new_versions:
         version = dl['version']
         url = dl['url']
+        target_branch = get_target_branch(version, downloads)
 
         print(f"\n{'='*60}")
-        print(f"Processing version {version}")
+        print(f"Processing version {version} → branch '{target_branch}'")
         print(f"{'='*60}")
+
+        # Ensure target branch exists
+        if not ensure_branch_exists(target_branch):
+            print(f"Failed to create/access branch '{target_branch}'")
+            failed_versions.append(version)
+            continue
+
+        # Switch to target branch
+        if not switch_to_branch(target_branch):
+            print(f"Failed to switch to branch '{target_branch}'")
+            failed_versions.append(version)
+            continue
 
         # Update and commit
         if not update_version(url):
             print(f"Failed to update version {version}")
             failed_versions.append(version)
             continue
+
+        branches_updated.add(target_branch)
 
         # Build package
         if not build_package():
@@ -253,12 +348,14 @@ def main():
     print("SUMMARY")
     print("="*60)
     print(f"Processed: {success_count}/{len(new_versions)} version(s)")
+    print(f"Branches updated: {', '.join(sorted(branches_updated)) if branches_updated else 'none'}")
 
     if failed_versions:
         print(f"Failed versions: {', '.join(failed_versions)}")
         sys.exit(1)
     elif success_count > 0:
         print("All versions processed successfully!")
+        print("\nNote: Changes committed to branches. Workflow will push them.")
         sys.exit(0)
     else:
         print("No versions were processed.")

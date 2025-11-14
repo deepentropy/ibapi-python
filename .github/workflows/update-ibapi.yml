@@ -50,12 +50,21 @@ jobs:
           export SKIP_PYPI_UPLOAD=true
           python check_and_update.py
 
-          # Check if any new tags were created
-          NEW_TAGS=$(git tag --points-at HEAD)
-          if [ -n "$NEW_TAGS" ]; then
+          # Collect all new tags across all branches
+          ALL_NEW_TAGS=""
+          for branch in main stable; do
+            if git show-ref --verify --quiet refs/heads/$branch; then
+              BRANCH_TAGS=$(git tag --points-at $branch)
+              if [ -n "$BRANCH_TAGS" ]; then
+                ALL_NEW_TAGS="$ALL_NEW_TAGS $BRANCH_TAGS"
+              fi
+            fi
+          done
+
+          if [ -n "$ALL_NEW_TAGS" ]; then
             echo "has-new-version=true" >> $GITHUB_OUTPUT
-            echo "new-tags=$NEW_TAGS" >> $GITHUB_OUTPUT
-            echo "New versions found: $NEW_TAGS"
+            echo "new-tags=$ALL_NEW_TAGS" >> $GITHUB_OUTPUT
+            echo "New versions found: $ALL_NEW_TAGS"
           else
             echo "has-new-version=false" >> $GITHUB_OUTPUT
             echo "No new versions found"
@@ -64,7 +73,13 @@ jobs:
       - name: Push changes and tags
         if: steps.check.outputs.has-new-version == 'true'
         run: |
-          git push origin main --follow-tags
+          # Push all branches that exist and have changes
+          for branch in main stable; do
+            if git show-ref --verify --quiet refs/heads/$branch; then
+              echo "Pushing branch $branch..."
+              git push origin $branch --follow-tags || echo "No changes to push for $branch"
+            fi
+          done
 
       - name: Store the distribution packages
         if: steps.check.outputs.has-new-version == 'true'

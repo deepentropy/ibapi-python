@@ -3,7 +3,7 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ibapi"
+name = "ibapi-python"
 dynamic = ["version"]
 description = "Interactive Brokers Python API"
 readme = "README.md"

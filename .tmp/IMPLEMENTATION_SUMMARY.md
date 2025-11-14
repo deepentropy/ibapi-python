@@ -97,11 +97,11 @@ Complete documentation rewrite:
 ### User Experience
 ```bash
 # Install latest version (highest version number)
-pip install ibapi
+pip install ibapi-python
 
 # Install specific version
-pip install ibapi==10.37.2  # Stable
-pip install ibapi==10.40.1  # Latest
+pip install ibapi-python==10.37.2  # Stable
+pip install ibapi-python==10.40.1  # Latest
 
 # Clone from main branch (Latest)
 git clone https://github.com/user/ibapi-python.git
@@ -128,7 +128,7 @@ pip install git+https://github.com/user/ibapi-python.git@v10.40.1
 1. **Configure PyPI Trusted Publishing**:
    - Go to https://pypi.org/manage/account/publishing/
    - Add a new publisher for GitHub Actions:
-     - PyPI Project Name: `ibapi`
+     - PyPI Project Name: `ibapi-python`
      - Owner: `<your-github-username>`
      - Repository name: `ibapi-python`
      - Workflow name: `update-ibapi.yml`

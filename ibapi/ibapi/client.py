@@ -326,7 +326,8 @@ class EClient(object):
         self.conn.sendMsg(full_msg)
 
     def sendMsg(self, msgId:int, msg: str):
-        useRawIntMsgId = self.serverVersion() >= MIN_SERVER_VER_PROTOBUF
+        # Always use raw int msgId for performance (MIN_SERVER_VER_PROTOBUF = 100)
+        useRawIntMsgId = True
         full_msg = comm.make_msg(msgId, useRawIntMsgId, msg)
         logger.info("%s %s %s", "SENDING", current_fn_name(1), full_msg)
         self.conn.sendMsg(full_msg)
@@ -583,14 +584,10 @@ class EClient(object):
                         self.msgLoopTmo()
                     else:
 
-                        if self.serverVersion() >= MIN_SERVER_VER_PROTOBUF:
-                            sMsgId = text[:4]
-                            msgId = int.from_bytes(sMsgId, 'big')  
-                            text = text[4:]
-                        else:
-                            sMsgId = text[:text.index(b"\0")]
-                            text = text[text.index(b"\0") + len(b"\0"):]
-                            msgId = int(sMsgId)
+                        # Always use fast int parsing (MIN_SERVER_VER_PROTOBUF = 100)
+                        sMsgId = text[:4]
+                        msgId = int.from_bytes(sMsgId, 'big')
+                        text = text[4:]
 
                         if msgId > PROTOBUF_MSG_ID:
                             msgId -= PROTOBUF_MSG_ID

@@ -23,12 +23,9 @@ def make_msg_proto(msgId: int, protobufData: bytes) -> bytes:
     return msg
 
 def make_msg(msgId:int, useRawIntMsgId: bool, text: str) -> bytes:
-    """adds the length prefix"""
-    if useRawIntMsgId:
-        text = msgId.to_bytes(4, 'big') + str.encode(text)
-    else:
-        text = str.encode(make_field(msgId) + text)
-
+    """adds the length prefix - optimized to always use raw int msgId for performance"""
+    # Always use raw int msgId since protobuf is forced (MIN_SERVER_VER_PROTOBUF = 100)
+    text = msgId.to_bytes(4, 'big') + str.encode(text)
     msg = struct.pack(f"!I{len(text)}s", len(text), text)
     return msg
 

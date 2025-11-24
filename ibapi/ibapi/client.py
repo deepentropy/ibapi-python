@@ -148,7 +148,9 @@ from ibapi.server_versions import (
     MIN_SERVER_VER_IMBALANCE_ONLY,
     MIN_SERVER_VER_PARAMETRIZED_DAYS_OF_EXECUTIONS,
     MIN_SERVER_VER_PROTOBUF,
-    MIN_SERVER_VER_CANCEL_CONTRACT_DATA
+    MIN_SERVER_VER_CANCEL_CONTRACT_DATA,
+    MIN_SERVER_VER_ADDITIONAL_ORDER_PARAMS_1,
+    MIN_SERVER_VER_ADDITIONAL_ORDER_PARAMS_2
 )
 
 from ibapi.utils import ClientException, log_
@@ -2769,6 +2771,12 @@ class EClient(object):
             self.wrapper.error(orderId, currentTimeMillis(), NOT_CONNECTED.code(), NOT_CONNECTED.msg())
             return
 
+        if placeOrderRequestProto.HasField('order'):
+            wrongParam = self.validateOrderParameters(placeOrderRequestProto.order)
+            if wrongParam is not None:
+                self.wrapper.error(orderId, currentTimeMillis(),
+                                   UPDATE_TWS.code(), UPDATE_TWS.msg() + " The following order parameter is not supported by your TWS version - " + wrongParam)
+                return
         try:
             serializedString = placeOrderRequestProto.SerializeToString()
 
@@ -2780,6 +2788,31 @@ class EClient(object):
         except Exception as ex:
             self.wrapper.error(orderId, currentTimeMillis(), FAIL_SEND_ORDER.code(), FAIL_SEND_ORDER.msg() + str(ex))
             return
+
+    def validateOrderParameters(self, order) -> str | None:
+        if self.serverVersion() < MIN_SERVER_VER_ADDITIONAL_ORDER_PARAMS_1:
+            if order.HasField('deactivate'):
+                return "deactivate"
+
+            if order.HasField('postOnly'):
+                return "postOnly"
+
+            if order.HasField('allowPreOpen'):
+                return "allowPreOpen"
+
+            if order.HasField('ignoreOpenAuction'):
+                return "ignoreOpenAuction"
+
+        if self.serverVersion() < MIN_SERVER_VER_ADDITIONAL_ORDER_PARAMS_2:
+            if order.HasField('routeMarketableToBbo'):
+                return "routeMarketableToBbo"
+
+            if order.HasField('seekPriceImprovement'):
+                return "seekPriceImprovement"
+
+            if order.HasField('whatIfType'):
+                return "whatIfType"
+        return None
 
     def cancelOrder(self, orderId: OrderId, orderCancel: OrderCancel):
         """Call this function to cancel an order.
@@ -4818,6 +4851,7 @@ class EClient(object):
             1 min
             2 mins
             3 mins
+            4 mins
             5 mins
             15 mins
             30 mins

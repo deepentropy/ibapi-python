@@ -16,6 +16,7 @@ synchronous calls that wait for responses before returning.
 import threading
 import time
 from decimal import Decimal
+from ibapi.account_summary_tags import AccountSummaryTags
 from ibapi.client import EClient
 from ibapi.wrapper import EWrapper
 from ibapi.contract import Contract, ContractDetails
@@ -24,6 +25,7 @@ from ibapi.order_state import OrderState
 from ibapi.execution import Execution, ExecutionFilter
 from ibapi.order_cancel import OrderCancel
 from ibapi.common import TickerId, OrderId, BarData
+from ibapi.ticktype import TickTypeEnum
 
 class ResponseTimeout(Exception):
 	"""Exception raised when a response is not received within the timeout period."""
@@ -312,13 +314,7 @@ class TWSSyncWrapper(EWrapper, EClient):
 		if reqId not in self.market_data:
 			self.market_data[reqId] = {}
 
-		if "price" not in self.market_data[reqId]:
-			self.market_data[reqId]["price"] = {}
-
-		self.market_data[reqId]["price"][tickType] = {
-			"price": price,
-			"attrib": attrib
-		}
+		self.market_data[reqId][TickTypeEnum.toStr(tickType)] = price
 
 		# Don't set the event here, wait for snapshot end or a timeout
 		super().tickPrice(reqId, tickType, price, attrib)
@@ -328,14 +324,30 @@ class TWSSyncWrapper(EWrapper, EClient):
 		if reqId not in self.market_data:
 			self.market_data[reqId] = {}
 
-		if "size" not in self.market_data[reqId]:
-			self.market_data[reqId]["size"] = {}
-
-		self.market_data[reqId]["size"][tickType] = size
+		self.market_data[reqId][TickTypeEnum.toStr(tickType)] = size
 
 		# Don't set the event here, wait for snapshot end or a timeout
 		super().tickSize(reqId, tickType, size)
 
+	def tickString(self, reqId, tickType, value):
+		"""Called when string tick data is returned."""
+		if reqId not in self.market_data:
+			self.market_data[reqId] = {}
+		self.market_data[reqId][TickTypeEnum.toStr(tickType)] = value
+
+	def tickGeneric(self, reqId, tickType, value):
+		"""Called when generic tick data is returned."""
+		if reqId not in self.market_data:
+			self.market_data[reqId] = {}
+		self.market_data[reqId][TickTypeEnum.toStr(tickType)] = value
+	
+	def tickNews(self, reqId, timeStamp, providerCode, articleId, headline, extraData):
+		if reqId not in self.market_data:
+			self.market_data[reqId] = {}
+		if "News" not in self.market_data[reqId].keys():
+			self.market_data[reqId]["News"] = []
+		self.market_data[reqId]["News"].append({"timeStamp": timeStamp, "providerCode":providerCode, "articleId":articleId, "headline": headline, "extraData": extraData})
+	
 	def tickSnapshotEnd(self, reqId: int):
 		"""Called when all market data for a snapshot has been received."""
 		self._set_event(reqId, "market_data", self.market_data.get(reqId, {}))

@@ -279,6 +279,14 @@ def decodeOrder(orderId: int, contractProto: ContractProto, orderProto: OrderPro
     if orderProto.HasField('shareholder'): order.shareholder = orderProto.shareholder
     if orderProto.HasField('routeMarketableToBbo'): order.routeMarketableToBbo = orderProto.routeMarketableToBbo
     if orderProto.HasField('parentPermId'): order.parentPermId = orderProto.parentPermId
+    if orderProto.HasField('postOnly'): order.postOnly = orderProto.postOnly
+    if orderProto.HasField('allowPreOpen'): order.allowPreOpen = orderProto.allowPreOpen
+    if orderProto.HasField('ignoreOpenAuction'): order.ignoreOpenAuction = orderProto.ignoreOpenAuction
+    if orderProto.HasField('deactivate'): order.deactivate = orderProto.deactivate
+    if orderProto.HasField('activeStartTime'): order.activeStartTime = orderProto.activeStartTime
+    if orderProto.HasField('activeStopTime'): order.activeStopTime = orderProto.activeStopTime
+    if orderProto.HasField('seekPriceImprovement'): order.seekPriceImprovement = orderProto.seekPriceImprovement
+    if orderProto.HasField('whatIfType'): order.whatIfType = orderProto.whatIfType
 
     return order
 
@@ -490,6 +498,7 @@ def decodeContractDetails(contractProto: ContractProto, contractDetailsProto: Co
     if contractDetailsProto.HasField('minSize'): contractDetails.minSize = Decimal(contractDetailsProto.minSize)
     if contractDetailsProto.HasField('sizeIncrement'): contractDetails.sizeIncrement = Decimal(contractDetailsProto.sizeIncrement)
     if contractDetailsProto.HasField('suggestedSizeIncrement'): contractDetails.suggestedSizeIncrement = Decimal(contractDetailsProto.suggestedSizeIncrement)
+    if contractDetailsProto.HasField('minAlgoSize'): contractDetails.minAlgoSize = Decimal(contractDetailsProto.minAlgoSize)
 
     setLastTradeDate(contract.lastTradeDateOrContractMonth, contractDetails, isBond);
 

@@ -354,6 +354,13 @@ def createOrderProto(order: Order) -> OrderProto:
     if order.submitter: orderProto.submitter = order.submitter
     if order.autoCancelParent: orderProto.autoCancelParent = order.autoCancelParent
     if order.imbalanceOnly: orderProto.imbalanceOnly = order.imbalanceOnly
+    if order.postOnly: orderProto.postOnly = order.postOnly
+    if order.allowPreOpen: orderProto.allowPreOpen = order.allowPreOpen
+    if order.ignoreOpenAuction: orderProto.ignoreOpenAuction = order.ignoreOpenAuction
+    if order.deactivate: orderProto.deactivate = order.deactivate
+    if order.seekPriceImprovement is not None: orderProto.seekPriceImprovement = 1 if order.seekPriceImprovement else 0
+    if isValidIntValue(order.whatIfType): orderProto.whatIfType = order.whatIfType
+    if order.routeMarketableToBbo is not None: orderProto.routeMarketableToBbo = 1 if order.routeMarketableToBbo else 0
 
     return orderProto
 

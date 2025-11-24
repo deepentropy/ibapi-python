@@ -212,7 +212,7 @@ class Order(Object):
         self.autoCancelParent = False
         self.shareholder = ""
         self.imbalanceOnly = False
-        self.routeMarketableToBbo = False
+        self.routeMarketableToBbo = None
         self.parentPermId = 0
 
         self.usePriceMgmtAlgo = None
@@ -231,6 +231,12 @@ class Order(Object):
         self.includeOvernight = False
         self.manualOrderIndicator = UNSET_INTEGER
         self.submitter = ""
+        self.postOnly = False
+        self.allowPreOpen = False
+        self.ignoreOpenAuction = False
+        self.deactivate = False
+        self.seekPriceImprovement = None
+        self.whatIfType = UNSET_INTEGER
 
     def __str__(self):
         s = "%s,%s,%s:" % (

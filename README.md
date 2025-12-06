@@ -1,7 +1,5 @@
 # ibapi
 
-> **⚠️ UNOFFICIAL PACKAGE** | This is an independent community project, **NOT** officially affiliated with Interactive Brokers LLC.
-
 Automated publisher for the Interactive Brokers TWS API Python client on PyPI.
 
 [![PyPI Latest](https://img.shields.io/pypi/v/ibapi-latest?label=latest)](https://pypi.org/project/ibapi-latest/)

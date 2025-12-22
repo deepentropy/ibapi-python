@@ -150,7 +150,8 @@ from ibapi.server_versions import (
     MIN_SERVER_VER_PROTOBUF,
     MIN_SERVER_VER_CANCEL_CONTRACT_DATA,
     MIN_SERVER_VER_ADDITIONAL_ORDER_PARAMS_1,
-    MIN_SERVER_VER_ADDITIONAL_ORDER_PARAMS_2
+    MIN_SERVER_VER_ADDITIONAL_ORDER_PARAMS_2,
+    MIN_SERVER_VER_ATTACHED_ORDERS
 )
 
 from ibapi.utils import ClientException, log_
@@ -270,6 +271,7 @@ from ibapi.protobuf.SubscribeToGroupEventsRequest_pb2 import SubscribeToGroupEve
 from ibapi.protobuf.UpdateDisplayGroupRequest_pb2 import UpdateDisplayGroupRequest as UpdateDisplayGroupRequestProto
 from ibapi.protobuf.UnsubscribeFromGroupEventsRequest_pb2 import UnsubscribeFromGroupEventsRequest as UnsubscribeFromGroupEventsRequestProto
 from ibapi.protobuf.MarketDepthExchangesRequest_pb2 import MarketDepthExchangesRequest as MarketDepthExchangesRequestProto
+from ibapi.protobuf.AttachedOrders_pb2 import AttachedOrders as AttachedOrdersProto
 
 # TODO: use pylint
 
@@ -2777,6 +2779,14 @@ class EClient(object):
                 self.wrapper.error(orderId, currentTimeMillis(),
                                    UPDATE_TWS.code(), UPDATE_TWS.msg() + " The following order parameter is not supported by your TWS version - " + wrongParam)
                 return
+
+        if placeOrderRequestProto.HasField('attachedOrders'):
+            wrongParam = self.validateAttachedOrdersParameters(placeOrderRequestProto.attachedOrders)
+            if wrongParam is not None:
+                self.wrapper.error(orderId, currentTimeMillis(),
+                                   UPDATE_TWS.code(), UPDATE_TWS.msg() + " The following attached orders parameter is not supported by your TWS version - " + wrongParam)
+                return
+
         try:
             serializedString = placeOrderRequestProto.SerializeToString()
 
@@ -2812,6 +2822,18 @@ class EClient(object):
 
             if order.HasField('whatIfType'):
                 return "whatIfType"
+        return None
+
+    def validateAttachedOrdersParameters(self, attachedOrders: AttachedOrdersProto) -> str | None:
+        if self.serverVersion() < MIN_SERVER_VER_ATTACHED_ORDERS:
+            if attachedOrders.HasField('slOrderId'):
+                return "slOrderId"
+            if attachedOrders.HasField('slOrderType'):
+                return "slOrderType"
+            if attachedOrders.HasField('ptOrderId'):
+                return "ptOrderId"
+            if attachedOrders.HasField('ptOrderType'):
+                return "ptOrderType"
         return None
 
     def cancelOrder(self, orderId: OrderId, orderCancel: OrderCancel):

@@ -238,6 +238,12 @@ class Order(Object):
         self.seekPriceImprovement = None
         self.whatIfType = UNSET_INTEGER
 
+        # attached orders
+        self.slOrderId = UNSET_INTEGER
+        self.slOrderType = ""
+        self.ptOrderId = UNSET_INTEGER
+        self.ptOrderType = ""
+
     def __str__(self):
         s = "%s,%s,%s:" % (
             intMaxString(self.orderId),

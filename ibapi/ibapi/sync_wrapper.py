@@ -88,10 +88,21 @@ class TWSSyncWrapper(EWrapper, EClient):
 		while not self.isConnected() and time.time() < timeout:
 			time.sleep(0.1)
 
+		if not self.isConnected():
+			return False
+
 		# Create a thread for message processing
 		self.api_thread = threading.Thread(target=self.run)
 		self.api_thread.daemon = True
 		self.api_thread.start()
+
+		# Wait for connection to be fully established (i.e. next_valid_id is received)
+		timeout = time.time() + 5 # 5 seconds timeout
+		while self.next_valid_id_value is None and time.time() < timeout:
+			time.sleep(0.1)
+
+		if self.next_valid_id_value is None:
+			return False
 
 		return self.isConnected()
 

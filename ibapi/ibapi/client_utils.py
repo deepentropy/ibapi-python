@@ -106,6 +106,7 @@ from ibapi.protobuf.UnsubscribeFromGroupEventsRequest_pb2 import UnsubscribeFrom
 from ibapi.protobuf.MarketDepthExchangesRequest_pb2 import MarketDepthExchangesRequest as MarketDepthExchangesRequestProto
 from ibapi.protobuf.CancelContractData_pb2 import CancelContractData as CancelContractDataProto
 from ibapi.protobuf.CancelHistoricalTicks_pb2 import CancelHistoricalTicks as CancelHistoricalTicksProto
+from ibapi.protobuf.AttachedOrders_pb2 import AttachedOrders as AttachedOrdersProto
 
 from ibapi.errors import (
     ERROR_ENCODING_PROTOBUF
@@ -137,7 +138,18 @@ def createPlaceOrderRequestProto(orderId: int, contract: Contract, order: Order)
     if contractProto is not None: placeOrderRequestProto.contract.CopyFrom(contractProto)
     orderProto = createOrderProto(order)
     if orderProto is not None: placeOrderRequestProto.order.CopyFrom(orderProto)
+    attachedOrdersProto = createAttachedOrdersProto(order)
+    if attachedOrdersProto is not None: placeOrderRequestProto.attachedOrders.CopyFrom(attachedOrdersProto)
     return placeOrderRequestProto
+
+@staticmethod
+def createAttachedOrdersProto(order: Order) -> AttachedOrdersProto:
+    attachedOrdersProto = AttachedOrdersProto()
+    if isValidIntValue(order.slOrderId): attachedOrdersProto.slOrderId = order.slOrderId
+    if order.slOrderType: attachedOrdersProto.slOrderType = order.slOrderType
+    if isValidIntValue(order.ptOrderId): attachedOrdersProto.ptOrderId = order.ptOrderId
+    if order.ptOrderType: attachedOrdersProto.ptOrderType = order.ptOrderType
+    return attachedOrdersProto
 
 @staticmethod
 def createContractProto(contract: Contract, order: Order) -> ContractProto:
